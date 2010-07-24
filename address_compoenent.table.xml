@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+  <meta>
+    <sampleQuery>select * from {table} where place="bucharest,ro"</sampleQuery>
+    <author>Adrian Statescu</author>
+    <description></description>
+  </meta>
+  <bindings>
+    <select>
+       <inputs>
+          <key id="place" type="xs:string" paramType="variable" required="true" />
+          <key id="type" type="xs:string" paramType="variable" required="false" />
+          <key id="location" type="xs:string" paramType="variable" required="false" />
+       </inputs>
+       <execute><![CDATA[
+           var res = y.query("use 'http://thinkphp.ro/apps/geo/geo.infomap/geocode.xml' as g; select * from g where address='"+ place +"' and sensor='false'").results;
+
+           if(res.GeocodeResponse.status.toString() !== 'ZERO_RESULTS') {
+              
+                 var result = res.GeocodeResponse.result[0];
+                 var lat = result.geometry.location.lat;
+                     lat = parseFloat(lat);
+
+               var out = <ul/>; 
+               for each(curr in result.address_component) {
+                  var ttt = curr.long_name+ ' (' + curr.type[0].text() + ')';
+                  var li = <li>{ttt}</li>; 
+                  out.li += li;
+               }
+  
+               response.object = <div class="earth">{res.GeocodeResponse.status.text()}{out}{lat}</div>;
+
+            } else {
+
+              response.object = <div class="error">No found location for {place}</div>;
+            }
+
+       ]]></execute>
+    </select>
+  </bindings>
+</table>

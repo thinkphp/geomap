@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+  <meta>
+    <sampleQuery>select * from {table} where place="bucharest,ro"</sampleQuery>
+    <author>Adrian Statescu</author>
+    <description></description>
+  </meta>
+  <bindings>
+    <select>
+       <inputs>
+          <key id="place" type="xs:string" paramType="variable" required="true" />
+          <key id="type" type="xs:string" paramType="variable" required="false" />
+          <key id="location" type="xs:string" paramType="variable" required="false" />
+       </inputs>
+       <execute><![CDATA[
+           var res = y.query("use 'http://thinkphp.ro/apps/geo/geo.infomap/geocode.xml' as g; select * from g where address='"+ place +"' and sensor='false'").results;
+           var result = res.GeocodeResponse.result[0];  
+           var lat = result.geometry.location.lat;
+           var lng = result.geometry.location.lng;
+               lat = parseFloat(lat);
+               lng = parseFloat(lng);
+
+           if(lat === +lat && lng === +lng) {
+ 
+              var src = "http://maps.google.com/maps/api/staticmap?center="+lat+","+lng+"&zoom=15"+
+                        "&markers="+lat+","+lng+"&size=250x200&sensor=false&"+
+                        "key=ABQIAAAAHFKkG2s1GKwMWvhsxH6UGhTsE91L0UkYXwp_YlL0uSAPtCVs5hTWKxoV6BCF8F8RGtpqa4IYPMkbcQ";
+ 
+              if(location === 'true') {
+
+                    var address_component = <ul/>; 
+                        for each(curr in result.address_component) {
+                        var ttt = curr.long_name+ ' (' + curr.type[0].text() + ')';
+                        var li = <li>{ttt}</li>; 
+                        address_component.li += li;
+                    }
+
+  
+                    var loc = <ul class="location">
+                                  <li>Formatted Address: {result..formatted_address.text()}</li>
+                                  <li>Address:<ul>;
+                                  <li>{result.address_component[0].long_name.text()}, {result.address_component[0].type[0].text()}</li>
+                                  <li>{result.address_component[1].long_name.text()}, {result.address_component[1].type[0].text()}</li>
+                                  <li>{result.address_component[2].long_name.text()}, {result.address_component[2].type[0].text()}</li>
+                                  </ul></li>
+                                  <li>Geometry<ul>
+                                      <li>Location<ul>
+                                          <li>latitude: {lat}</li>
+                                          <li>longitude: {lng}</li>
+                                      </ul></li>
+                                      <li>Location Type: {result..location_type.text()}</li>
+                                      <li>Viewport<ul>
+                                         <li>southwest<ul>
+                                           <li>latitude: {result.geometry.viewport.southwest.lat.text()}</li>
+                                           <li>longitude: {result.geometry.viewport.southwest.lng.text()}</li>
+                                         </ul></li>
+                                         <li>northeast<ul>
+                                          <li>latitude: {result.geometry.viewport.northeast.lat.text()}</li>
+                                          <li>longitude: {result.geometry.viewport.northeast.lng.text()}</li>
+                                         </ul></li>
+                                      </ul></li>    
+                                  </ul></li> 
+                              </ul>;    
+              } 
+ 
+              if(type === 'data') {
+                    var data = y.query("select * from data.uri where url='"+ src +"'").results;
+                    var datauri = data..url; 
+                    var dataimg = <img/>;
+                        dataimg.@src = datauri;
+                        dataimg.@alt = place;                 
+              }
+ 
+              var img = <img/>; 
+                  img.@src = src;
+                  img.@alt = place; 
+
+              var out = (type == 'data') ? dataimg : img;
+
+              response.object = <div class="earth">{out}{loc}</div>;
+
+           } else {
+
+              response.object = <div class="error">No location found for {place}.</div>;
+           }   
+
+       ]]></execute>
+    </select>
+  </bindings>
+</table>

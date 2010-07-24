@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+<meta>
+    <author>Adrian Statescu</author>
+    <description>Geocoding is a process of converting addresses (like strada bodesti,nr 2,bucharest,ro) into geographic coordinates (like latitude 37.423021 and longitude -122.083739) which you can use to place markers or position the map. the Google Geocoding API provides a direct way to access a geocoder via an HTTP request. Additionally, the service allows you to perform the converse operation(turning coordinates into addresses) this process is known as "reverse geocoding"</description>
+    <documentationURL>http://code.google.com/apis/maps/documentation/geocoding/#Geocoding</documentationURL>
+    <sampleQuery>select * from geocode where address="strada banului, nr.2, bucharest,ro" where sensor="false"</sampleQuery> 
+</meta>
+<bindings>
+    <select itemPath="" produces="XML">
+      <urls>
+         <url env="all">http://maps.google.com/maps/api/geocode/xml?address={address}&amp;sensor={sensor}</url>
+      </urls>
+      <inputs>
+         <key id="address" type="xs:string" paramType="path" required="true" />
+         <key id="sensor" type="xs:string" paramType="path" required="true" />
+      </inputs>  
+    </select>  
+</bindings>
+
+</table>

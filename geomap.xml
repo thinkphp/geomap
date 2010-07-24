@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+  <meta>
+    <sampleQuery>select * from {table} where place="172 stirbei voda, bucuresti"</sampleQuery>
+    <author>Adrian Statescu</author>
+    <description>Add a nice map google Image with location data to any HTML documents. Creates an badge of map with a star at the location you defined. Return the HTML Element image with location data. If you provide a type parameter of "data" it returns the image as a data URI. If you set the location parameter to true you also get the information about the place.</description>
+  </meta>
+  <bindings>
+    <select>
+       <inputs>
+          <key id="place" type="xs:string" paramType="variable" required="true" />
+          <key id="type" type="xs:string" paramType="variable" required="false" />
+          <key id="location" type="xs:string" paramType="variable" required="false" />
+       </inputs>
+       <execute><![CDATA[
+        var res = y.query("use 'http://thinkphp.ro/apps/geo/geomap/geocode.xml' as g; select * from g where address='"+ place +"' and sensor='false'").results;
+
+        if(res.GeocodeResponse.status.toString() !== 'ZERO_RESULTS') {
+            
+           var result = res.GeocodeResponse.result[0];  
+           var lat = result.geometry.location.lat;
+           var lng = result.geometry.location.lng;
+               lat = parseFloat(lat);
+               lng = parseFloat(lng);
+
+           if(lat === +lat && lng === +lng) {
+ 
+              var src = "http://maps.google.com/maps/api/staticmap?center="+lat+","+lng+"&zoom=15"+
+                        "&markers="+lat+","+lng+"&size=250x200&sensor=false&"+
+                        "key=ABQIAAAAHFKkG2s1GKwMWvhsxH6UGhTsE91L0UkYXwp_YlL0uSAPtCVs5hTWKxoV6BCF8F8RGtpqa4IYPMkbcQ";
+ 
+              if(location === 'true') {
+                    var address_component = <ul/>; 
+                        for each(curr in result.address_component) {
+                            var text = curr.long_name+ ' (' + curr.type[0].text() + ')';
+                            var li = <li>{text}</li>; 
+                            address_component.li += li;
+                        }
+
+                    var formatted_address = <li>Formatted Address: {result..formatted_address.text()}</li>;
+
+                    var geometry = <li>Geometry<ul>
+                                      <li>Location<ul>
+                                          <li>latitude: {lat}</li>
+                                          <li>longitude: {lng}</li>
+                                      </ul></li>
+                                      <li>Location Type: {result..location_type.text()}</li>
+                                      <li>Viewport<ul>
+                                         <li>southwest<ul>
+                                           <li>latitude: {result.geometry.viewport.southwest.lat.text()}</li>
+                                           <li>longitude: {result.geometry.viewport.southwest.lng.text()}</li>
+                                         </ul></li>
+                                         <li>northeast<ul>
+                                          <li>latitude: {result.geometry.viewport.northeast.lat.text()}</li>
+                                          <li>longitude: {result.geometry.viewport.northeast.lng.text()}</li>
+                                         </ul></li>
+                                      </ul></li>
+
+                                      <li>Bounds<ul>
+                                         <li>southwest<ul>
+                                           <li>latitude: {result.geometry.bounds.southwest.lat.text()}</li>
+                                           <li>longitude: {result.geometry.bounds.southwest.lng.text()}</li>
+                                         </ul></li>
+                                         <li>northeast<ul>
+                                          <li>latitude: {result.geometry.bounds.northeast.lat.text()}</li>
+                                          <li>longitude: {result.geometry.bounds.northeast.lng.text()}</li>
+                                         </ul></li>
+                                      </ul></li>
+
+                                  </ul></li>;    
+              } 
+
+              if(type === 'data') {
+                 var data = y.query("select * from data.uri where url='"+ src +"'").results;
+                 var datauri = data..url; 
+                 var dataimg = <img/>;
+                     dataimg.@src = datauri;
+                     dataimg.@alt = place;                 
+              }
+
+              var img = <img/>; 
+                  img.@src = src;
+                  img.@alt = place; 
+
+              var out = (type == 'data') ? dataimg : img;
+
+              response.object = <div class="glob">{out}<ul class="location">{formatted_address}<li>Address Component{address_component}</li>{geometry}</ul></div>;
+
+           } else {
+
+              response.object = <div class="error">No location found for {place}.</div>;
+           }   
+
+       } else {
+
+              response.object = <div class="error">No location found for {place}.</div>;
+       }
+
+       ]]></execute>
+    </select>
+  </bindings>
+</table>

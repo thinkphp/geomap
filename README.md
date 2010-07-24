@@ -1,0 +1,1 @@
+Return the HTML Element image with location data at location you defined. If you provide a type parameter of "data" it returns the image as a data URI. If you set the location parameter to true you also get the information about the place.
